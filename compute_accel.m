@@ -70,9 +70,6 @@ function [ax,ay,atheta] = compute_accel(x,y,theta,box_params)
         tau_ext = tau_ext + tau_i;
     end 
 
-    % Calculate the external torque (might be wrong)
-    tau_ext = cross(P_world - P_c, F_spring);
-    
     % Calulate accelerations
     ax = F_ext(1)/m;
     ay = F_ext(2)/m;

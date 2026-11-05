@@ -61,10 +61,10 @@ function [ax,ay,atheta] = compute_accel(x,y,theta,box_params)
         F_ext = F_grav + F_i;
 
         % Position from the centroid to the spring force application point
-        P_i = PB - P_c;
+        r_i = PB - P_c;
 
         % Torque exerted by each spring
-         tau_i = P_i(1)*F_i(2) - P_i(2)*F_i(1);
+         tau_i = r_i(1)*F_i(2) - r_i(2)*F_i(1);
         
         % Add the spring torque
         tau_ext = tau_ext + tau_i;
@@ -77,5 +77,4 @@ function [ax,ay,atheta] = compute_accel(x,y,theta,box_params)
     ax = F_ext(1)/m;
     ay = F_ext(2)/m;
     atheta = tau_ext/I;
-
 end

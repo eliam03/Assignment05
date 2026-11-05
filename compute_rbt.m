@@ -13,9 +13,9 @@
 %the world-frame coordinates of the points in Plist_box
 
 function Plist_world = compute_rbt(x,y,theta,Plist_box)
-box_centroid = [x;y];
-rot_matrix = [cos(theta), -sin(theta);
-             sin(theta),  cos(theta)];
-             
-Plist_world = rot_matrix*Plist_box + box_centroid;  
+    box_centroid = [x;y];
+    rot_matrix = [cos(theta), -sin(theta);
+                 sin(theta),  cos(theta)];
+                 
+    Plist_world = rot_matrix*Plist_box + box_centroid;  
 end

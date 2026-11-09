@@ -1,8 +1,10 @@
 function simulate_box()
+    clf;
+    close all;
     %define system parameters
-    LW = 10; LH = 1; LG = 3;
-    m = 1; Ic = (1/12)*(LH^2+LW^2);
-    g = 1; k = 20; k_list = [.5*k,.5*k,2*k,5*k];
+    LW = 10; LH = 10; LG = 3;
+    m = 20; Ic = (1/12)*(LH^2+LW^2);
+    g = 9.1; k = 50; k_list = [.5*k,.5*k,2*k,5*k];
     l0 = 1.5*LG;
     Pbl_box = [-LW;-LH]/2;
     Pbr_box = [LW;-LH]/2;
@@ -67,28 +69,55 @@ function simulate_box()
 
     [tlist,Vlist, ~, ~, ~] = explicit_RK_variable_step_integration(box_wrapper,tspan,V0,h,DormandPrince,p,error_desired);
     
+
+    fname='box_with_springs_animation.avi';
+    input_fname = fname;
+    %create a videowriter, which will write frames to the animation file
+    writerObj = VideoWriter(input_fname);
+    open(writerObj); %must call open before writing any frames
+    fig1 = figure(1);
+    xlabel("$X$ Position (-)", Interpreter="latex");
+    ylabel("$Y$ Position (-)", Interpreter="latex");
+    title("Box Simulation", Interpreter="latex")
+    set(gca,'TickLabelInterpreter','latex')
+    fontsize(scale=2)
+
+    set(fig1,'units','pixels','position',[0 0 1440 1080])
     num_zigs = 5;
     w = .1;
     hold on;
-    spring_plot_struct = initialize_spring_plot(num_zigs,w);
+    % lowk inspired by shauna's code.... 
+    sp1 = initialize_spring_plot(num_zigs,w);
+    sp2 = initialize_spring_plot(num_zigs,w);
+    sp3 = initialize_spring_plot(num_zigs,w);
+    sp4 = initialize_spring_plot(num_zigs,w);
+    origin = plot(0, 0, 'black');
     axis equal; axis square;
-    axis([-3,3,-3,3]);
-    xlist = Vlist(:, 1);
-    ylist = Vlist(:, 2);
-    thetalist = Vlist(:, 3);
-    for i=1:length(thetalist)
-        theta_center = thetalist(i)
-        x_center = xlist(i)
-        y_center = ylist(i)
-        Plist_world = compute_rbt(x_center,y_center,theta_center,P_box);
-        tl = Plist_world(1)
-        bl = Plist_world(2)
-        tr = Plist_world(3)
-        br = Plist_world(4)
-        % update_spring_plot(spring_plot_struct, Pbl1_world, tl)
-        % update_spring_plot(spring_plot_struct, Pbl2_world, bl)
-        % update_spring_plot(spring_plot_struct, Pbr1_world, tr)
-        % update_spring_plot(spring_plot_struct, Pbr2_world, br)
+    axis([-40,40,-40,40]);
+    for frames = 1:200
+        x = Vlist(frames,1);
+        y = Vlist(frames, 2);
+        theta = Vlist(frames, 3);
+        P_box = box_params.P_box;
+        P_world = compute_rbt(x, y, theta, P_box);
+        Q_world = box_params.P_world;
+        update_spring_plot(sp1,P_world(:, 1), Q_world(:, 1));
+        update_spring_plot(sp2,P_world(:, 2), Q_world(:, 2));
+        update_spring_plot(sp3,P_world(:, 3), Q_world(:, 3));
+        update_spring_plot(sp4,P_world(:, 4), Q_world(:, 4));
+
+        %Draw box
+        bound = box_params.boundary_pts;
+        box_bound = compute_rbt(x, y, theta, bound);
+        set(origin, 'xdata', box_bound(1, :), 'ydata', box_bound(2, :));
         drawnow;
+
+        %capture a frame (what is currently plotted)
+        current_frame = getframe(fig1);
+        %write the frame to the video
+        writeVideo(writerObj,current_frame);
+
+        
     end
+    close(writerObj);
 end

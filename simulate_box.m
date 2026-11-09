@@ -5,7 +5,7 @@ function simulate_box()
     %define system parameters
     LW = 10; LH = 10; LG = 3;
     m = 20; Ic = (1/12)*(LH^2+LW^2);
-    g = 9.1; k = 50; k_list = [.5*k,.5*k,2*k,5*k];
+    g = 9.1; k = 50; k_list = [.5*k 2*k 1.5*k 5*k];
     l0 = 1.5*LG;
     Pbl_box = [-LW;-LH]/2;
     Pbr_box = [LW;-LH]/2;
@@ -33,10 +33,10 @@ function simulate_box()
     my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
     x0 = 5;
     y0 = 5;
-    theta0 = 45;
+    theta0 = 0.5;
     vx0 = 2;
-    vy0 = 3;
-    vtheta0 = 35;
+    vy0 = 2;
+    vtheta0 = 0.5;
     V0 = [x0;y0;theta0;vx0;vy0;vtheta0];
     tspan = [0, 100];
     %run the integration
@@ -102,10 +102,10 @@ function simulate_box()
         P_box = box_params.P_box;
         P_world = compute_rbt(x, y, theta, P_box);
         Q_world = box_params.P_world;
-        update_spring_plot(sp1,P_world(:, 1), Q_world(:, 1));
-        update_spring_plot(sp2,P_world(:, 2), Q_world(:, 2));
-        update_spring_plot(sp3,P_world(:, 3), Q_world(:, 3));
-        update_spring_plot(sp4,P_world(:, 4), Q_world(:, 4));
+        update_spring_plot(sp1,Q_world(:, 1), P_world(:, 1));
+        update_spring_plot(sp2,Q_world(:, 2), P_world(:, 2));
+        update_spring_plot(sp3,Q_world(:, 3), P_world(:, 3));
+        update_spring_plot(sp4,Q_world(:, 4), P_world(:, 4));
 
         %Draw box
         bound = box_params.boundary_pts;

@@ -87,9 +87,12 @@ function simulate_box_equalibrium()
 
     V0 = Veq + epsilon*[dx0;dy0;dtheta0;vx0;vy0;vtheta0];
 
-    my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
+    my_rate_func = @(t_in, V_in) box_rate_func(t_in,V_in,box_params);
 
-    my_linear_rate = @(t_in, V_in) approximate_jacobian(my_rate_func, V0)*(V_in-V_eq);
+    equil_func = @(V_in) box_rate_func(0, V_in, box_params);
+    j_approx = approximate_jacobian(equil_func, Veq)
+
+    my_linear_rate = @(t_in, V_in) j_approx*(V_in-Veq);
 
     %run the integration of nonlinear system
     [tlist_nonlinear,Vlist_nonlinear] =explicit_RK_variable_step_integration(my_rate_func,tspan,V0,h,DormandPrince,p,error_desired);

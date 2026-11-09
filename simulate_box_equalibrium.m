@@ -112,6 +112,10 @@ function simulate_box_equalibrium()
     plot(tlist_nonlinear,Vlist_nonlinear(:, 3))
     % theta
 
-   
+    lgd = legend([p1, p2], {"Non linear Solution", "Linearized Solution"}); 
+    ldg.Orientation = 'horizontal';
+    lgd.Location = 'southeastoutside'; 
+    lgd.Position = [0.7 0.02 0.2 0.05];
+    sgtitle('Comparison of linear and nonlinear ODE for a big perturbation', 'interpreter', 'latex')
 
 end

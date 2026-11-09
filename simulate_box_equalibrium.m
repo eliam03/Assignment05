@@ -30,7 +30,7 @@ function simulate_box_equalibrium()
     box_params.boundary_pts = boundary_pts;
     %load the system parameters into the rate function
     %via an anonymous function
-    my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
+   
     x0 = 5;
     y0 = 5;
     theta0 = 45;
@@ -63,12 +63,49 @@ function simulate_box_equalibrium()
      35/384, 0, 500/1113, 125/192, ...
         -2187/6784, 11/84, 0];
 
-    box_wrapper = @(t, V0) box_rate_func(t,V0,box_params);
+    t=3;
+    solver_params=struct();
+
+    box_wrapper = @(V0) box_rate_func(t,V0,box_params);
+
     h = 0.05;
     p = 5.5;
     error_desired = 0.0001;
 
-    [tlist,Vlist, ~, ~, ~] = multi_newton_solver(box_wrapper,tspan,V0,h,DormandPrince,p,error_desired);
+    [Xn,~] = multi_newton_solver(box_wrapper,V0,solver_params);
     
+    dx0 = Xn(1);
+    dy0 = Xn(2);
+    dtheta0 = Xn(3);
+    vx0 = 0;
+    vy0 = 0;
+    vtheta0 = 0;
+    %small number used to scale initial perturbation
+    epsilon =0.00005;
 
+    Veq=Xn;
+
+    V0 = Veq + epsilon*[dx0;dy0;dtheta0;vx0;vy0;vtheta0];
+
+    my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
+
+    my_linear_rate = @(t_in, V_in) approximate_jacobian(my_rate_func, V0)*(V_in-V_eq);
+
+    %run the integration of nonlinear system
+    [tlist_nonlinear,Vlist_nonlinear] =explicit_RK_variable_step_integration(my_rate_func,tspan,V0,h,DormandPrince,p,error_desired);
+    %run the integration of linear system
+    [tlist_linear,Vlist_linear] = explicit_RK_variable_step_integration(my_linear_rate,tspan,V0,h,DormandPrince,p,error_desired);
+    
+    subplot(3, 1, 1)
+    plot(tlist_nonlinear,Vlist_nonlinear(:,1))
+    plot(tlist_linear,Vlist_linear(:,1))
+    % x
+    subplot(3, 1, 2)
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 2))
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 2))
+    % y
+    subplot(3, 1, 3)
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 3))
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 3))
+    % theta
 end

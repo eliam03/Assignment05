@@ -104,9 +104,9 @@ function simulate_box_eigen()
     y_modal = Veq(2)+epsilon*Umode(2)*cos(omega_n*tlist);
     theta_modal = Veq(3)+epsilon*Umode(3)*cos(omega_n*tlist);
 
-    % V0 = V_eq + epsilon*[dx0;dy0;dtheta0;vx0;vy0;vtheta0];
-    % 
-    % J_approx = approximate_jacobian(equilibrium_func, V_eq);
+    V0 = V_eq + epsilon*[dx0;dy0;dtheta0;vx0;vy0;vtheta0];
+
+    J_approx = approximate_jacobian(equilibrium_func, V_eq);
     % my_linear_rate = @(t_in,V_in) J_approx*(V_in-V_eq);
     % 
     % %run the integration of nonlinear system
@@ -141,6 +141,7 @@ function simulate_box_eigen()
     xlabel("Time (-)")
     ylabel("Theta (-)")
     % theta
+
     lgd = legend([p1, p2], {"Non linear Solution", "Linearized Solution"}); 
     ldg.Orientation = 'horizontal';
     lgd.Location = 'southeastoutside'; 

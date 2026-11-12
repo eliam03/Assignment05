@@ -33,12 +33,12 @@ function simulate_box_equalibrium()
    
     x0 = 5;
     y0 = 5;
-    theta0 = 45;
+    theta0 = 0.5;
     vx0 = 2;
-    vy0 = 3;
-    vtheta0 = 35;
+    vy0 = 2;
+    vtheta0 = 0.5;
     V0 = [x0;y0;theta0;vx0;vy0;vtheta0];
-    tspan = [0, 100];
+    tspan = [0, 6];
     %run the integration
     DormandPrince = struct();
 
@@ -66,13 +66,15 @@ function simulate_box_equalibrium()
     t=3;
     solver_params=struct();
 
-    box_wrapper = @(V0) box_rate_func(t,V0,box_params);
+    box_wrapper = @(Vin) box_rate_func(t,Vin,box_params);
 
     h = 0.05;
     p = 5.5;
     error_desired = 0.0001;
 
     [Xn,~] = multi_newton_solver(box_wrapper,V0,solver_params);
+    
+    box_wrapper(Xn)
     
     dx0 = Xn(1);
     dy0 = Xn(2);
@@ -81,7 +83,7 @@ function simulate_box_equalibrium()
     vy0 = 0;
     vtheta0 = 0;
     %small number used to scale initial perturbation
-    epsilon =0.00005;
+    epsilon =0;
 
     Veq=Xn;
 
@@ -90,32 +92,38 @@ function simulate_box_equalibrium()
     my_rate_func = @(t_in, V_in) box_rate_func(t_in,V_in,box_params);
 
     equil_func = @(V_in) box_rate_func(0, V_in, box_params);
-    j_approx = approximate_jacobian(equil_func, Veq)
+    j_approx = approximate_jacobian(equil_func, Veq);
 
     my_linear_rate = @(t_in, V_in) j_approx*(V_in-Veq);
 
     %run the integration of nonlinear system
-    [tlist_nonlinear,Vlist_nonlinear] =explicit_RK_variable_step_integration(my_rate_func,tspan,V0,h,DormandPrince,p,error_desired);
+    % [tlist_nonlinear,Vlist_nonlinear] =explicit_RK_variable_step_integration(my_rate_func,tspan,V0,h,DormandPrince,p,error_desired);
+    [tlist_nonlinear,Vlist_nonlinear] = ode45(my_rate_func,tspan,V0);
     %run the integration of linear system
-    [tlist_linear,Vlist_linear] = explicit_RK_variable_step_integration(my_linear_rate,tspan,V0,h,DormandPrince,p,error_desired);
+    % [tlist_linear,Vlist_linear] = explicit_RK_variable_step_integration(my_linear_rate,tspan,V0,h,DormandPrince,p,error_desired);
+    [tlist_linear,Vlist_linear] = ode45(my_linear_rate,tspan,V0);
     
+   figure();
     subplot(3, 1, 1)
-    plot(tlist_nonlinear,Vlist_nonlinear(:,1))
-    plot(tlist_linear,Vlist_linear(:,1))
+    plot(tlist_nonlinear,Vlist_nonlinear(:,1)); hold on;
+    plot(tlist_linear,Vlist_linear(:,1),'r--')
+    title("Small Perturbation of a System in Equilibrium Over Time")
+    xlabel("Time (-)")
+    ylabel("X Position (-)")
+    hold off;
     % x
     subplot(3, 1, 2)
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 2))
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 2))
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 2)); hold on;
+    plot(tlist_linear,Vlist_linear(:, 2),"r--"); hold off;
+    xlabel("Time (-)")
+    ylabel("Y Position (-)")
     % y
     subplot(3, 1, 3)
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 3))
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 3))
+    plot(tlist_nonlinear,Vlist_nonlinear(:, 3)); hold on;
+    plot(tlist_linear,Vlist_linear(:, 3),"r--"); hold off;
+    xlabel("Time (-)")
+    ylabel("Theta (-)")
     % theta
-
-    lgd = legend([p1, p2], {"Non linear Solution", "Linearized Solution"}); 
-    ldg.Orientation = 'horizontal';
-    lgd.Location = 'southeastoutside'; 
-    lgd.Position = [0.7 0.02 0.2 0.05];
-    sgtitle('Comparison of linear and nonlinear ODE for a big perturbation', 'interpreter', 'latex')
-
+    %legend("Non linear", "Linear", 'location', 'bestoutside')
+    sgtitle('Comparison of linearized and nonlinear ODE ')
 end

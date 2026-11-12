@@ -3,9 +3,11 @@ function simulate_box()
     clf;
     close all;
     %define system parameters
-    LW = 10; LH = 10; LG = 3;
-    m = 20; Ic = (1/12)*(LH^2+LW^2);
-    g = 9.1; k = 50; k_list = [.5*k 2*k 1.5*k 5*k];
+
+
+    LW = 10; LH = 1; LG = 3;
+    m = 1; Ic = (1/12)*(LH^2+LW^2);
+    g = 1; k = 20; k_list = [.5*k,.5*k,2*k,5*k];
     l0 = 1.5*LG;
     Pbl_box = [-LW;-LH]/2;
     Pbr_box = [LW;-LH]/2;
@@ -17,7 +19,8 @@ function simulate_box()
     Pbr1_world = Pbr_box + [0;-l0];
     Pbr2_world = Pbr_box + [l0;0];
     P_world = [Pbl1_world,Pbl2_world,Pbr1_world,Pbr2_world];
-    P_box = [Ptl_box,Pbl_box,Ptr_box,Pbr_box];
+    P_box = [Pbl_box,Pbl_box,Pbr_box,Pbr_box];
+
     %define system parameters
     box_params = struct();
     box_params.m = m;
@@ -31,6 +34,7 @@ function simulate_box()
     %load the system parameters into the rate function
     %via an anonymous function
     my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
+
     x0 = 5;
     y0 = 5;
     theta0 = 0.5;
@@ -68,7 +72,7 @@ function simulate_box()
     p = 5.5;
     error_desired = 0.0001;
 
-    [tlist,Vlist, ~, ~, ~] = explicit_RK_variable_step_integration(box_wrapper,tspan,V0,h,DormandPrince,p,error_desired);
+    [tlist,Vlist] = ode45(box_wrapper,tspan,V0);
     
 
     fname='box_with_springs_animation.avi';

@@ -2,10 +2,16 @@
 function simulate_box_equalibrium()
     clf;
     close all;
+
+    set(groot, 'defaultTextInterpreter', 'latex');
+    set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
+    set(groot, 'defaultLegendInterpreter', 'latex');
+    set(groot, 'defaultColorbarTickLabelInterpreter', 'latex');
+
     %define system parameters
-    LW = 10; LH = 10; LG = 3;
-    m = 20; Ic = (1/12)*(LH^2+LW^2);
-    g = 9.1; k = 50; k_list = [.5*k,.5*k,2*k,5*k];
+  LW = 10; LH = 1; LG = 3;
+    m = 1; Ic = (1/12)*(LH^2+LW^2);
+    g = 1; k = 20; k_list = [.5*k,.5*k,2*k,5*k];
     l0 = 1.5*LG;
     Pbl_box = [-LW;-LH]/2;
     Pbr_box = [LW;-LH]/2;
@@ -17,7 +23,8 @@ function simulate_box_equalibrium()
     Pbr1_world = Pbr_box + [0;-l0];
     Pbr2_world = Pbr_box + [l0;0];
     P_world = [Pbl1_world,Pbl2_world,Pbr1_world,Pbr2_world];
-    P_box = [Ptl_box,Pbl_box,Ptr_box,Pbr_box];
+    P_box = [Pbl_box,Pbl_box,Pbr_box,Pbr_box];
+
     %define system parameters
     box_params = struct();
     box_params.m = m;
@@ -30,39 +37,16 @@ function simulate_box_equalibrium()
     box_params.boundary_pts = boundary_pts;
     %load the system parameters into the rate function
     %via an anonymous function
-   
-    x0 = 5;
-    y0 = 5;
-    theta0 = 0.5;
-    vx0 = 2;
-    vy0 = 2;
-    vtheta0 = 0.5;
+    my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
+
+    x0 = .182;
+    y0 = .478;
+    theta0 = -.321;
+    vx0 = 0.5;
+    vy0 = 0.5;
+    vtheta0 = -.5;
     V0 = [x0;y0;theta0;vx0;vy0;vtheta0];
-    tspan = [0, 6];
-    %run the integration
-    DormandPrince = struct();
-
-    DormandPrince.C = ...
-    [0, 1/5, 3/10, 4/5, 8/9, 1, 1];
-
-    DormandPrince.B = ...
-    [35/384, 0, 500/1113, 125/192, ...
-     -2187/6784, 11/84, 0;
-     5179/57600, 0, 7571/16695, 393/640, ...
-     -92097/339200, 187/2100, 1/40];
-
-    DormandPrince.A = ...
-    [0, 0, 0, 0, 0, 0, 0;
-     1/5, 0, 0, 0, 0, 0, 0;
-     3/40, 9/40, 0, 0, 0, 0, 0;
-     44/45, -56/15, 32/9, 0, 0, 0, 0;
-     19372/6561, -25360/2187, 64448/6561, ...
-        -212/729, 0, 0, 0;
-     9017/3168, -355/33, 46732/5247, ...
-        49/176, -5103/18656, 0, 0;
-     35/384, 0, 500/1113, 125/192, ...
-        -2187/6784, 11/84, 0];
-
+    tspan = [0, 60];
     t=3;
     solver_params=struct();
 
@@ -83,7 +67,7 @@ function simulate_box_equalibrium()
     vy0 = 0;
     vtheta0 = 0;
     %small number used to scale initial perturbation
-    epsilon =0;
+    epsilon =10;
 
     Veq=Xn;
 
@@ -104,26 +88,33 @@ function simulate_box_equalibrium()
     [tlist_linear,Vlist_linear] = ode45(my_linear_rate,tspan,V0);
     
    figure();
-    subplot(3, 1, 1)
-    plot(tlist_nonlinear,Vlist_nonlinear(:,1)); hold on;
-    plot(tlist_linear,Vlist_linear(:,1),'r--')
-    title("Small Perturbation of a System in Equilibrium Over Time")
+   t = tiledlayout(3, 1);
+    % subplot(3, 1, 1)
+    ax1 = nexttile;
+    plot(ax1, tlist_nonlinear,Vlist_nonlinear(:,1)); hold on;
+    plot(ax1, tlist_linear,Vlist_linear(:,1),'r--')
+    title("Large Perturbation of a System in Equilibrium Over Time ($\varepsilon$ = 10)")
     xlabel("Time (-)")
     ylabel("X Position (-)")
     hold off;
     % x
-    subplot(3, 1, 2)
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 2)); hold on;
-    plot(tlist_linear,Vlist_linear(:, 2),"r--"); hold off;
+    % subplot(3, 1, 2)
+    ax2 = nexttile;
+    plot(ax2, tlist_nonlinear,Vlist_nonlinear(:, 2)); hold on;
+    plot(ax2, tlist_linear,Vlist_linear(:, 2),"r--"); hold off;
     xlabel("Time (-)")
     ylabel("Y Position (-)")
     % y
-    subplot(3, 1, 3)
-    plot(tlist_nonlinear,Vlist_nonlinear(:, 3)); hold on;
-    plot(tlist_linear,Vlist_linear(:, 3),"r--"); hold off;
+    % subplot(3, 1, 3)
+    ax3 = nexttile;
+    plot(ax3, tlist_nonlinear,Vlist_nonlinear(:, 3)); hold on;
+    plot(ax3, tlist_linear,Vlist_linear(:, 3),"r--"); hold off;
     xlabel("Time (-)")
     ylabel("Theta (-)")
     % theta
-    %legend("Non linear", "Linear", 'location', 'bestoutside')
-    sgtitle('Comparison of linearized and nonlinear ODE ')
+    legend("Non linear", "Linear", 'location', 'southoutside', 'Orientation','horizontal', Interpreter="latex")
+    sgtitle('Comparison of linearized and nonlinear ODE ', Interpreter="latex")
+
+    myfig = gcf();
+    exportgraphics(myfig , 'large_perturbation.png', 'Resolution', 600);
 end

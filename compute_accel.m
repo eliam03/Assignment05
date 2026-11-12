@@ -38,18 +38,21 @@ function [ax,ay,atheta] = compute_accel(x,y,theta,box_params)
     % Center of mass
     P_c = [x ; y];
     
-    % Transform box points into world coordinates 
+    % % Transform box points into world coordinates 
     P_box_world = compute_rbt(x, y, theta, P_box);
 
     % Initial force and torque 
-    F_grav = [0; m*g]; % Gravity
+    F_grav = [0; -m*g]; % Gravity
     tau_ext = 0; % No initial external torque
+
+    F_ext = F_grav;
     
     % Simulate for every spring
 
     for i = 1:length(k_list)
         % Fixed end of the spring
         PA = P_world(:,i);
+        
 
         % Moving end of the spring 
         PB = P_box_world(:,i);
@@ -58,7 +61,7 @@ function [ax,ay,atheta] = compute_accel(x,y,theta,box_params)
         F_i = compute_spring_force(k_list(i),l0_list(i),PA,PB);
 
         % Update the external force by adding the spring force
-        F_ext = F_grav + F_i;
+        F_ext = F_ext + F_i;
 
         % Position from the centroid to the spring force application point
         r_i = PB - P_c;

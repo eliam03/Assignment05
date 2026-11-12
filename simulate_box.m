@@ -2,6 +2,12 @@
 function simulate_box()
     clf;
     close all;
+
+    set(groot, 'defaultTextInterpreter', 'latex');
+    set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
+    set(groot, 'defaultLegendInterpreter', 'latex');
+    set(groot, 'defaultColorbarTickLabelInterpreter', 'latex');
+
     %define system parameters
 
 
@@ -35,44 +41,20 @@ function simulate_box()
     %via an anonymous function
     my_rate_func = @(t_in,V_in) box_rate_func(t_in,V_in,box_params);
 
-    x0 = 5;
-    y0 = 5;
-    theta0 = 0.5;
-    vx0 = 2;
-    vy0 = 2;
-    vtheta0 = 0.5;
+    x0 = .182;
+    y0 = .478;
+    theta0 = -.321;
+    vx0 = 0.5;
+    vy0 = 0.5;
+    vtheta0 = -.5;
     V0 = [x0;y0;theta0;vx0;vy0;vtheta0];
-    tspan = [0, 100];
-    %run the integration
-    DormandPrince = struct();
+    tspan = [0, 60];
 
-    DormandPrince.C = ...
-    [0, 1/5, 3/10, 4/5, 8/9, 1, 1];
-
-    DormandPrince.B = ...
-    [35/384, 0, 500/1113, 125/192, ...
-     -2187/6784, 11/84, 0;
-     5179/57600, 0, 7571/16695, 393/640, ...
-     -92097/339200, 187/2100, 1/40];
-
-    DormandPrince.A = ...
-    [0, 0, 0, 0, 0, 0, 0;
-     1/5, 0, 0, 0, 0, 0, 0;
-     3/40, 9/40, 0, 0, 0, 0, 0;
-     44/45, -56/15, 32/9, 0, 0, 0, 0;
-     19372/6561, -25360/2187, 64448/6561, ...
-        -212/729, 0, 0, 0;
-     9017/3168, -355/33, 46732/5247, ...
-        49/176, -5103/18656, 0, 0;
-     35/384, 0, 500/1113, 125/192, ...
-        -2187/6784, 11/84, 0];
-
+    
     box_wrapper = @(t, V0) box_rate_func(t,V0,box_params);
-    h = 0.05;
-    p = 5.5;
-    error_desired = 0.0001;
 
-    [tlist,Vlist] = ode45(box_wrapper,tspan,V0);
+
+    [tlist,Vlist] = ode45(box_wrapper,linspace(0,tspan(end),1001),V0);
     
 
     fname='box_with_springs_animation.avi';
@@ -91,7 +73,7 @@ function simulate_box()
     num_zigs = 5;
     w = .1;
     hold on;
-    % lowk inspired by shauna's code.... 
+
     sp1 = initialize_spring_plot(num_zigs,w);
     sp2 = initialize_spring_plot(num_zigs,w);
     sp3 = initialize_spring_plot(num_zigs,w);
@@ -99,17 +81,16 @@ function simulate_box()
     origin = plot(0, 0, 'black');
     axis equal; axis square;
     axis([-40,40,-40,40]);
-    for frames = 1:200
+    for frames = 1:length(tlist)
         x = Vlist(frames,1);
         y = Vlist(frames, 2);
         theta = Vlist(frames, 3);
-        P_box = box_params.P_box;
-        P_world = compute_rbt(x, y, theta, P_box);
+        R_world = compute_rbt(x, y, theta, box_params.P_box);
         Q_world = box_params.P_world;
-        update_spring_plot(sp1,Q_world(:, 1), P_world(:, 1));
-        update_spring_plot(sp2,Q_world(:, 2), P_world(:, 2));
-        update_spring_plot(sp3,Q_world(:, 3), P_world(:, 3));
-        update_spring_plot(sp4,Q_world(:, 4), P_world(:, 4));
+        update_spring_plot(sp1,R_world(:, 1), Q_world(:, 1));
+        update_spring_plot(sp2,R_world(:, 2), Q_world(:, 2));
+        update_spring_plot(sp3,R_world(:, 3), Q_world(:, 3));
+        update_spring_plot(sp4,R_world(:, 4), Q_world(:, 4));
 
         %Draw box
         bound = box_params.boundary_pts;
@@ -122,7 +103,7 @@ function simulate_box()
         %write the frame to the video
         writeVideo(writerObj,current_frame);
 
-        
+
     end
     close(writerObj);
 end
